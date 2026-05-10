@@ -10,6 +10,7 @@ import '../../vehicle/provider/vehicle_provider.dart';
 import '../../../shared/widgets/loading_button.dart';
 import '../../../shared/widgets/form/text_field_control.dart';
 import '../../../shared/widgets/form/dropdown_control.dart';
+import '../../../shared/widgets/form/date_picker_control.dart';
 
 class AccidentFormPage extends ConsumerStatefulWidget {
   final Accident? accident;
@@ -116,6 +117,7 @@ class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
                         ),
                   ),
                 ),
+                DatePickerControl(label: 'Accident Date', controller: _form.accidentDateController),
                 TextFieldControl(
                     label: 'Driver Name',
                     controller: _form.driverNameController),

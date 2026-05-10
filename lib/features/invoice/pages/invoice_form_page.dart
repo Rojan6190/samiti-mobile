@@ -11,7 +11,7 @@ import '../../../shared/widgets/loading_button.dart';
 import '../../../shared/widgets/form/text_field_control.dart';
 import '../../../shared/widgets/form/dropdown_control.dart';
 import '../../../shared/widgets/form/number_field_control.dart';
-
+import '../../../shared/widgets/form/date_picker_control.dart';
 class InvoiceFormPage extends ConsumerStatefulWidget {
   final Invoice? invoice;
   const InvoiceFormPage({super.key, this.invoice});
@@ -234,8 +234,8 @@ class _InvoiceFormPageState extends ConsumerState<InvoiceFormPage> {
                   autoFocus: true,
                   validator: _form.validateName,
                 ),
-                TextFieldControl(
-                  label: 'Date (YYYY-MM-DD)',
+                DatePickerControl(
+                  label: 'Date',
                   controller: _form.dateController,
                   validator: _form.validateDate,
                 ),

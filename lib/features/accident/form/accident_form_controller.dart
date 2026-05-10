@@ -10,6 +10,8 @@ class AccidentFormController extends BaseFormController {
   final accidentPlaceController = TextEditingController();
   final accidentCauseController = TextEditingController();
   final remarksController = TextEditingController();
+  final accidentDateController = TextEditingController();
+
 
   int? selectedVehicleId;
   List<XFile> newImages = [];
@@ -25,6 +27,9 @@ class AccidentFormController extends BaseFormController {
     accidentCauseController.text = accident.accidentCause ?? '';
     remarksController.text = accident.remarks ?? '';
     selectedVehicleId = accident.vehicle?.id;
+    // prefill date - take only date part (strip time)
+    accidentDateController.text =
+        accident.accidentDate?.substring(0,10) ?? ''; //added
   }
 
   Map<String, dynamic> get formFields => {
@@ -34,6 +39,7 @@ class AccidentFormController extends BaseFormController {
     'accident_place': accidentPlaceController.text.trim(),
     'accident_cause': accidentCauseController.text.trim(),
     'remarks': remarksController.text.trim(),
+    'accident_date': accidentDateController.text.trim(), //added
   };
 
   @override
@@ -43,5 +49,6 @@ class AccidentFormController extends BaseFormController {
     accidentPlaceController.dispose();
     accidentCauseController.dispose();
     remarksController.dispose();
+    accidentDateController.dispose();
   }
 }
