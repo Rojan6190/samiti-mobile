@@ -13,6 +13,7 @@ class AccidentFormController extends BaseFormController {
 
   int? selectedVehicleId;
   List<XFile> newImages = [];
+  List<int> deletedImageIds = []; // ← track deleted existing images
 
   String? validateName(String? v) =>
       FormValidator.required(v, label: 'Name');
@@ -25,6 +26,15 @@ class AccidentFormController extends BaseFormController {
     remarksController.text = accident.remarks ?? '';
     selectedVehicleId = accident.vehicle?.id;
   }
+
+  Map<String, dynamic> get formFields => {
+    'name': nameController.text.trim(),
+    'vehicle': selectedVehicleId.toString(),
+    'driver_name': driverNameController.text.trim(),
+    'accident_place': accidentPlaceController.text.trim(),
+    'accident_cause': accidentCauseController.text.trim(),
+    'remarks': remarksController.text.trim(),
+  };
 
   @override
   void dispose() {

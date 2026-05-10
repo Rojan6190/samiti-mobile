@@ -1,17 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:samiti_mobile_app/features/accident/data/accident_model.dart';
 class AccidentImageUpload extends StatefulWidget {
-  final List<String> existingImageUrls;
+  final List<AccidentImage> existingImages;
   final List<XFile> newImages;
-  final void Function(List<XFile>) onImagesChanged;
+  final void Function(List<XFile> newImages, List<int> deletedIds)
+  onChanged;
 
   const AccidentImageUpload({
     super.key,
-    required this.existingImageUrls,
+    required this.existingImages,
     required this.newImages,
-    required this.onImagesChanged,
+    required this.onChanged,
   });
 
   @override
@@ -19,11 +20,14 @@ class AccidentImageUpload extends StatefulWidget {
 }
 
 class _AccidentImageUploadState extends State<AccidentImageUpload> {
+  late List<AccidentImage> _existingImages;
   late List<XFile> _newImages;
+  final List<int> _deletedIds = [];
 
   @override
   void initState() {
     super.initState();
+    _existingImages = List.from(widget.existingImages);
     _newImages = List.from(widget.newImages);
   }
 
@@ -32,14 +36,25 @@ class _AccidentImageUploadState extends State<AccidentImageUpload> {
     await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file != null) {
       setState(() => _newImages.add(file));
-      widget.onImagesChanged(_newImages);
+      _notify();
     }
   }
 
-  void _removeNewImage(int index) {
-    setState(() => _newImages.removeAt(index));
-    widget.onImagesChanged(_newImages);
+  void _removeExisting(AccidentImage image) {
+    setState(() {
+      _existingImages.remove(image);
+      _deletedIds.add(image.id); // track for delete command
+    });
+    _notify();
   }
+
+  void _removeNew(int index) {
+    setState(() => _newImages.removeAt(index));
+    _notify();
+  }
+
+  void _notify() =>
+      widget.onChanged(_newImages, List.from(_deletedIds));
 
   void _viewImage(BuildContext context, ImageProvider image) {
     showDialog(
@@ -50,7 +65,7 @@ class _AccidentImageUploadState extends State<AccidentImageUpload> {
     );
   }
 
-  Widget _buildImageTile({
+  Widget _buildTile({
     required ImageProvider image,
     required VoidCallback onRemove,
     required VoidCallback onView,
@@ -65,7 +80,8 @@ class _AccidentImageUploadState extends State<AccidentImageUpload> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey.shade300),
-              image: DecorationImage(image: image, fit: BoxFit.cover),
+              image:
+              DecorationImage(image: image, fit: BoxFit.cover),
             ),
           ),
         ),
@@ -76,9 +92,7 @@ class _AccidentImageUploadState extends State<AccidentImageUpload> {
             onTap: onRemove,
             child: Container(
               decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
+                  color: Colors.red, shape: BoxShape.circle),
               padding: const EdgeInsets.all(4),
               child: const Icon(Icons.close,
                   size: 14, color: Colors.white),
@@ -95,35 +109,34 @@ class _AccidentImageUploadState extends State<AccidentImageUpload> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Images',
-            style:
-            TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
+            style: TextStyle(
+                fontWeight: FontWeight.w500, fontSize: 16)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           children: [
-            ...widget.existingImageUrls.map((url) {
-              final image = NetworkImage(url);
-              return _buildImageTile(
+            // existing images from server
+            ..._existingImages.map((img) {
+              final image = NetworkImage(img.image);
+              return _buildTile(
                 image: image,
                 onView: () => _viewImage(context, image),
-                onRemove: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text(
-                            'To delete existing images contact admin')),
-                  );
-                },
+                onRemove: () => _removeExisting(img),
               );
             }),
+
+            // newly picked images
             ..._newImages.asMap().entries.map((entry) {
               final image = FileImage(File(entry.value.path));
-              return _buildImageTile(
+              return _buildTile(
                 image: image,
                 onView: () => _viewImage(context, image),
-                onRemove: () => _removeNewImage(entry.key),
+                onRemove: () => _removeNew(entry.key),
               );
             }),
+
+            // add button
             GestureDetector(
               onTap: _pickImage,
               child: Container(

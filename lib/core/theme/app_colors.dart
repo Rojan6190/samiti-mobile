@@ -16,4 +16,5 @@ class AppColors {
   static const vehicles = Color(0xFF00BFA6);
   static const products = Color(0xFFFF6B6B);
   static const accidents = Color(0xFFFFB300);
+  static const invoices = Color(0xFF5C6BC0);
 }

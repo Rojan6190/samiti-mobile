@@ -6,4 +6,5 @@ class ApiConstants {
   static const String partners = 'v1/partners/';
   static const String vehicles = 'v1/vehicles/';
   static const String accidents = 'v1/accidents/';
+  static const String invoices = 'v1/invoices/';
 }

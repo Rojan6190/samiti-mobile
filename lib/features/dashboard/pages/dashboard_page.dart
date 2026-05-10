@@ -35,6 +35,12 @@ class DashboardPage extends ConsumerWidget {
         color: AppColors.accidents,
         route: '/accidents',
       ),
+      _ModuleItem(
+        icon: Icons.receipt_long_rounded,
+        label: 'Invoices',
+        color: AppColors.invoices,
+        route: '/invoices',
+      ),
     ];
 
     return Scaffold(

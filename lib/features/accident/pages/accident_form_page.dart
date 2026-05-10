@@ -1,11 +1,11 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:samiti_mobile_app/shared/widgets/accident_image_upload.dart';
 import '../data/accident_model.dart';
 import '../form/accident_form_controller.dart';
 import '../provider/accident_provider.dart';
-import '../../../shared/widgets/accident_image_upload.dart';
 import '../../vehicle/provider/vehicle_provider.dart';
 import '../../../shared/widgets/loading_button.dart';
 import '../../../shared/widgets/form/text_field_control.dart';
@@ -16,11 +16,13 @@ class AccidentFormPage extends ConsumerStatefulWidget {
   const AccidentFormPage({super.key, this.accident});
 
   @override
-  ConsumerState<AccidentFormPage> createState() => _AccidentFormPageState();
+  ConsumerState<AccidentFormPage> createState() =>
+      _AccidentFormPageState();
 }
 
 class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
   late final AccidentFormController _form;
+  List<int> _deletedImageIds = [];
   bool get _isEditing => widget.accident != null;
 
   @override
@@ -45,35 +47,19 @@ class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
       return;
     }
 
-    final imageFiles = await Future.wait(
-      _form.newImages.asMap().entries.map((entry) async {
-        return MapEntry(
-          'images[${entry.key}][image]',
-          await MultipartFile.fromFile(
-            entry.value.path,
-            filename: entry.value.name,
-          ),
-        );
-      }),
-    );
-
-    final formData = FormData.fromMap({
-      'name': _form.nameController.text.trim(),
-      'vehicle': _form.selectedVehicleId.toString(),
-      'driver_name': _form.driverNameController.text.trim(),
-      'accident_place': _form.accidentPlaceController.text.trim(),
-      'accident_cause': _form.accidentCauseController.text.trim(),
-      'remarks': _form.remarksController.text.trim(),
-      ...Map.fromEntries(imageFiles),
-    });
-
     try {
       if (_isEditing) {
-        await ref
-            .read(accidentProvider.notifier)
-            .update(widget.accident!.id, formData);
+        await ref.read(accidentProvider.notifier).update(
+          id: widget.accident!.id,
+          fields: _form.formFields,
+          newImages: _form.newImages,
+          deletedImageIds: _deletedImageIds,
+        );
       } else {
-        await ref.read(accidentProvider.notifier).create(formData);
+        await ref.read(accidentProvider.notifier).create(
+          fields: _form.formFields,
+          newImages: _form.newImages,
+        );
       }
       if (mounted) context.pop();
     } catch (e) {
@@ -93,7 +79,8 @@ class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-          title: Text(_isEditing ? 'Edit Accident' : 'New Accident')),
+          title:
+          Text(_isEditing ? 'Edit Accident' : 'New Accident')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -109,8 +96,8 @@ class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
                   validator: _form.validateName,
                 ),
                 vehiclesState.when(
-                  loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(
+                      child: CircularProgressIndicator()),
                   error: (e, _) =>
                       Text('Error loading vehicles: $e'),
                   data: (vehicles) => StatefulBuilder(
@@ -143,13 +130,15 @@ class _AccidentFormPageState extends ConsumerState<AccidentFormPage> {
                     controller: _form.remarksController),
                 const SizedBox(height: 16),
                 AccidentImageUpload(
-                  existingImageUrls: widget.accident?.images
-                      .map((e) => e.image)
-                      .toList() ??
-                      [],
+                  existingImages:
+                  widget.accident?.images ?? [],
                   newImages: _form.newImages,
-                  onImagesChanged: (images) =>
-                      setState(() => _form.newImages = images),
+                  onChanged: (newImages, deletedIds) {
+                    setState(() {
+                      _form.newImages = newImages;
+                      _deletedImageIds = deletedIds;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 LoadingButton(

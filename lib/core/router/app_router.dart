@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:samiti_mobile_app/features/invoice/data/invoice_model.dart';
+import 'package:samiti_mobile_app/features/invoice/pages/invoice_form_page.dart';
+import 'package:samiti_mobile_app/features/invoice/pages/invoice_list_page.dart';
 import '../../features/auth/pages/login_page.dart';
 import '../../features/auth/pages/register_page.dart';
 import '../../features/auth/provider/auth_provider.dart';
@@ -85,6 +88,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      GoRoute(
+        path: '/invoices',
+        builder: (_, __) => const InvoiceListPage(),
+        routes: [
+          GoRoute(
+              path: 'new',
+              builder: (_, __) => const InvoiceFormPage()),
+          GoRoute(
+            path: ':id',
+            builder: (_, state) =>
+                InvoiceFormPage(invoice: state.extra as Invoice?),
+          ),
+        ],
+      ),
     ],
   );
+
 });
